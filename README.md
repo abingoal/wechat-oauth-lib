@@ -4,75 +4,77 @@
 
 ## 使用方法
 
-1.  首先引入该类库
-
-> 需要的依赖`request-promise`
+1. 首先引入该类库
 
 ```typescript
 import WechatOauth from "../libs/oauth/wechat-oauth";
 ```
 
-2.  调用
+1. 调用
 
 ```typescript
-const code = req.body.code || "";
+const { code = "" }: IReqBody = req.body;
 if (!code) {
+  // 此处请自行处理参数错误的返回
   res.json(msgCode.parmsError);
+  return;
 }
 const token = await oauth.getAccessToken(code);
 let accesstoken: string = "";
 let openid: string = "";
-// 如果没有错误信息
-if (!token.errcode) {
-  openid = token.openid; // 获取openid
-  accesstoken = token.access_token; // 获取accesstoken
-  // 判断如果accesstoken过期，则续期
-  if (token.expires_in === 0) {
-    const refresh = await oauth.refreshToken(accesstoken);
-    if (!refresh.errcode) {
-      accesstoken = refresh.access_token;
-      openid = refresh.openid;
-    } else {
-      res.json({ code: refresh.errcode, msg: token.errmsg });
-    }
-  }
-  // 验证access_token是否有效
-  const checktoken = await oauth.checkToken(openid, accesstoken);
-  // 验证有效
-  if (checktoken.errcode === 0) {
-    // 获取用户信息
-    const userinfo = await oauth.userInfo(openid, accesstoken);
-    if (!userinfo.errcode) {
-      res.json({ code: userinfo.errcode, msg: userinfo.errmsg });
-    }
-    await dbUsers
-      .thirdPartLogin({
-        nickname,
-        avatar,
-        sex,
-        os,
-        ip,
-        deviceid,
-        openid
-      })
-      .then(data => tools.handleResult(data))
-      .catch(err => next(err));
-  } else {
-    res.json(checktoken);
-  }
-} else {
+// 如果有错误信息
+// 此处自行处理获取token失败的问题
+if (token.errcode) {
   res.json({ code: token.errcode, msg: token.errmsg });
+  return;
 }
+openid = token.openid; // 获取openid
+accesstoken = token.access_token; // 获取accesstoken
+// 判断如果accesstoken过期，则续期
+if (token.expires_in === 0) {
+  const refresh = await oauth.refreshToken(accesstoken);
+  if (refresh.errcode) {
+    res.json({ code: refresh.errcode, msg: token.errmsg });
+    return;
+  }
+  accesstoken = refresh.access_token;
+  openid = refresh.openid;
+}
+// 验证access_token是否有效
+const checktoken = await oauth.checkToken(openid, accesstoken);
+// 验证有效
+if (checktoken.errcode) {
+  res.json({ code: checktoken.errcode, msg: checktoken.errmsg });
+  return;
+}
+// 获取用户信息
+const userinfo = await oauth.userInfo(openid, accesstoken);
+if (userinfo.errcode) {
+  res.json({ code: userinfo.errcode, msg: userinfo.errmsg });
+  return;
+}
+await dbUsers
+  .thirdPartLogin({
+    nickname,
+    avatar,
+    sex,
+    os,
+    ip,
+    deviceid,
+    openid
+  })
+  .then(data => handleResult(data)) // 此处处理获取到的用户信息
+  .catch(err => next(err));
 ```
 
-3.  优化
+3. 优化
 
 调用微信登录授权之前，可以先查询数据库中是否存在该 openid 的用户，如果有则直接返回用户信息，而不用频繁调用授权接口
 
-4.  其他
+4. 其他
 
-详细的返回参数请参阅官方文档。由于使用 ts 编写，返回结果都有智能提示，请根据需要使用。
+详细的返回参数请参阅官方文档。
 
-例:
+图示:
 
 ![例子](/assets/img/example1.gif)

@@ -1,0 +1,27 @@
+{
+  "name": "wechat-oauth-lib",
+  "version": "1.0.0",
+  "description": "ts版本微信授权协议（服务端）",
+  "main": "index.js",
+  "dependencies": {
+    "axios": "^0.18.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abingoal/wechat-oauth-lib.git"
+  },
+  "keywords": [
+    "wechat",
+    "oauth"
+  ],
+  "author": "abingoal",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/abingoal/wechat-oauth-lib/issues"
+  },
+  "homepage": "https://github.com/abingoal/wechat-oauth-lib#readme"
+}

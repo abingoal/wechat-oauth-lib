@@ -1,4 +1,4 @@
-import * as rp from "request-promise";
+import axios, { AxiosRequestConfig } from "axios";
 /**
  * 成功结果结构
  */
@@ -42,7 +42,7 @@ interface IUserInfo {
  * @class WechatOauth
  */
 class WechatOauth {
-  private urlPrefix: string = "https://api.weixin.qq.com/sns";
+  private baseUrl: string = "https://api.weixin.qq.com/sns";
   private appid: string;
   private secret: string;
   /**
@@ -60,60 +60,82 @@ class WechatOauth {
    * 通过code换取access_token
    *
    * 调用频率限制 `5万/分钟`
-   *
+   * - 返回参数, 正确时
+    ``` json
+    {
+       "access_token":"ACCESS_TOKEN",
+       "expires_in":7200,
+       "refresh_token":"REFRESH_TOKEN",
+       "openid":"OPENID",
+       "scope":"SCOPE"
+    }
+    ```
+    - 返回参数，错误时
+    ``` json
+    {
+       "errcode":40029,
+       "errmsg":"invalid code"
+    }
+    ```
    * @param {string} code 客户端授权后返回的code
    * @returns 返回access_token
    * @memberof WechatOauth
-   *
-   * - 返回参数, 正确时
-   * ``` json
-   * {
-   *    "access_token":"ACCESS_TOKEN",
-   *    "expires_in":7200,
-   *    "refresh_token":"REFRESH_TOKEN",
-   *    "openid":"OPENID",
-   *    "scope":"SCOPE"
-   * }
-   * ```
-   * - 返回参数，错误时
-   * ``` json
-   * {
-   *    "errcode":40029,
-   *    "errmsg":"invalid code"
-   * }
-   * ```
    */
   public async getAccessToken(code: string) {
-    const options: rp.Options = {
-      uri: `${this.urlPrefix}/oauth2/access_token`,
-      qs: {
+    const options: AxiosRequestConfig = {
+      method: "get",
+      baseURL: this.baseUrl,
+      params: {
         appid: this.appid,
         secret: this.secret,
         code,
         grant_type: "authorization_code"
       }
     };
-    return await rp(options).then((data: ISuccessResult & IErrorResult) => data);
+    return await axios.get<ISuccessResult & IErrorResult>("/oauth2/access_token", options).then(res => res.data);
   }
   /**
    * 刷新access_token
    *
    * 调用频率限制 `10万/分钟`
    *
+   * access_token是调用授权关系接口的调用凭证，由于access_token有效期（目前为2个小时）较短，当access_token超时后，可以使用refresh_token进行刷新，access_token刷新结果有两种：
+   * 1. 若access_token已超时，那么进行refresh_token会获取一个新的access_token，新的超时时间；
+   * 2. 若access_token未超时，那么进行refresh_token不会改变access_token，但超时时间会刷新，相当于续期access_token。
+   *
+   * refresh_token拥有较长的有效期（30天）且无法续期，当refresh_token失效的后，需要用户重新授权后才可以继续获取用户头像昵称。
+   * - 返回参数, 正确时
+    ``` json
+    {
+       "access_token":"ACCESS_TOKEN",
+       "expires_in":7200,
+       "refresh_token":"REFRESH_TOKEN",
+       "openid":"OPENID",
+       "scope":"SCOPE"
+    }
+    ```
+    - 返回参数，错误时
+    ``` json
+    {
+       "errcode":40029,
+       "errmsg":"invalid code"
+    }
+    ```
    * @param {string} appid 应用唯一标识
-   * @param {string} refreshToken 待刷新token
+   * @param {string} refreshToken 通过access_token获取到的refresh_token参数
    * @memberof WechatOauth
    */
-  public async refreshToken<T>(refreshToken: string, grantType: string = "refresh_token") {
-    const options: rp.Options = {
-      uri: `${this.urlPrefix}/oauth2/refresh_token`,
-      qs: {
+  public async refreshToken(refreshToken: string, grantType: string = "refresh_token") {
+    const options: AxiosRequestConfig = {
+      method: "get",
+      baseURL: this.baseUrl,
+      params: {
         appid: this.appid,
         grant_type: "refresh_token",
         refresh_token: refreshToken
       }
     };
-    return await rp(options).then((data: ISuccessResult & IErrorResult) => data);
+    return await axios.get<ISuccessResult & IErrorResult>("/oauth2/refresh_token", options).then(res => res.data);
   }
   /**
    * 检验授权凭证（access_token）是否有效
@@ -121,43 +143,45 @@ class WechatOauth {
    * @param openid 普通用户的标识，对当前开发者帐号唯一
    * @param accessToken 调用凭证
    *
-   * - 正确的返回结果
-   * ``` json
-   * {
-   *    "errcode": 0,
-   *    "errmsg": "ok"
-   * }
-   * ```
+    - 正确的返回结果示例
+    ``` json
+    { "errcode": 0, "errmsg": "ok" }
+    ```
+    - 错误的返回结果示例
+    ``` json
+    { "errcode": 40003, "errmsg": "invalid openid" }
+    ```
    */
-  public async checkToken<T>(openid: string, accessToken: string) {
-    const options: rp.Options = {
-      url: `${this.urlPrefix}/auth`,
-      qs: {
+  public async checkToken(openid: string, accessToken: string) {
+    const options: AxiosRequestConfig = {
+      baseURL: this.baseUrl,
+      params: {
         openid,
         access_token: accessToken
       }
     };
-    return await rp(options).then((data: IErrorResult) => data);
+    return await axios.get<IErrorResult>("/auth", options).then(res => res.data);
   }
   /**
-   * 获取用户信息
+   * 获取用户信息（UnionID机制）
    *
    * 开发者最好保存unionID信息，以便以后在不同应用之间进行用户信息互通
    *
    * 调用频率限制 `5万/分钟`
    * @param {string} openid 普通用户的标识，对当前开发者帐号唯一
    * @param {string} accessToken 调用凭证
+   * @param {string} lang 国家地区语言版本，zh_CN 简体，zh_TW 繁体，en 英语，默认为zh-CN
    * @memberof WechatOauth
    */
-  public async userInfo<T>(openid: string, accessToken: string) {
-    const options: rp.Options = {
-      uri: `${this.urlPrefix}/userinfo`,
-      qs: {
+  public async userInfo(openid: string, accessToken: string, lang?: string) {
+    const options: AxiosRequestConfig = {
+      baseURL: this.baseUrl,
+      params: {
         openid,
         access_token: accessToken
       }
     };
-    return await rp(options).then((data: IUserInfo & IErrorResult) => data);
+    return await axios.get<IUserInfo & IErrorResult>("/userinfo", options).then(res => res.data);
   }
 }
 export default WechatOauth;
