@@ -4,13 +4,13 @@
 
 ## 使用方法
 
-1. 首先引入该类库
+### 首先引入该类库
 
 ```typescript
 import WechatOauth from "../libs/oauth/wechat-oauth";
 ```
 
-1. 调用
+### 调用
 
 ```typescript
 const { code = "" }: IReqBody = req.body;
@@ -67,13 +67,13 @@ await dbUsers
   .catch(err => next(err));
 ```
 
-3. 优化
+### 优化
 
 调用微信登录授权之前，可以先查询数据库中是否存在该 openid 的用户，如果有则直接返回用户信息，而不用频繁调用授权接口
 
-4. 其他
+### 其他
 
-详细的返回参数请参阅官方文档。
+详细的返回参数请参阅[官方文档](https://open.weixin.qq.com/cgi-bin/showdocument?action=dir_list&t=resource/res_list&verify=1&id=open1419316518&token=&lang=zh_CN)。
 
 图示:
 
