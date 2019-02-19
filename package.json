@@ -1,6 +1,6 @@
 {
   "name": "wechat-oauth-lib",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "ts版本微信授权协议（服务端）",
   "main": "index.js",
   "dependencies": {
