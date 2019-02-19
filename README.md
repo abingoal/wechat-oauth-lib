@@ -75,6 +75,6 @@ await dbUsers
 
 详细的返回参数请参阅[官方文档](https://open.weixin.qq.com/cgi-bin/showdocument?action=dir_list&t=resource/res_list&verify=1&id=open1419316518&token=&lang=zh_CN)。
 
-图示:
+### 图示
 
 ![例子](/assets/img/example1.gif)
