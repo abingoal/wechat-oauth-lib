@@ -1,0 +1,19 @@
+{
+  "defaultSeverity": "error",
+  "extends": ["tslint:recommended"],
+  "jsRules": {
+    "trailing-comma": false,
+    "object-literal-sort-keys": false
+  },
+  "rules": {
+    "trailing-comma": false,
+    "object-literal-sort-keys": false,
+    "no-require-imports": false,
+    "no-var-requires": false,
+    "arrow-parens": false,
+    "member-ordering": false,
+    "member-access": [true, "no-public"],
+    "jsdoc-format": false
+  },
+  "rulesDirectory": []
+}

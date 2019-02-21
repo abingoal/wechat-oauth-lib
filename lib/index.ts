@@ -81,7 +81,7 @@ class WechatOauth {
    * @returns 返回access_token
    * @memberof WechatOauth
    */
-  public async getAccessToken(code: string) {
+  async getAccessToken(code: string) {
     const options: AxiosRequestConfig = {
       method: "get",
       baseURL: this.baseUrl,
@@ -125,7 +125,7 @@ class WechatOauth {
    * @param {string} refreshToken 通过access_token获取到的refresh_token参数
    * @memberof WechatOauth
    */
-  public async refreshToken(refreshToken: string, grantType: string = "refresh_token") {
+  async refreshToken(refreshToken: string, grantType: string = "refresh_token") {
     const options: AxiosRequestConfig = {
       method: "get",
       baseURL: this.baseUrl,
@@ -152,7 +152,7 @@ class WechatOauth {
     { "errcode": 40003, "errmsg": "invalid openid" }
     ```
    */
-  public async checkToken(openid: string, accessToken: string) {
+  async checkToken(openid: string, accessToken: string) {
     const options: AxiosRequestConfig = {
       baseURL: this.baseUrl,
       params: {
@@ -173,7 +173,7 @@ class WechatOauth {
    * @param {string} lang 国家地区语言版本，zh_CN 简体，zh_TW 繁体，en 英语，默认为zh-CN
    * @memberof WechatOauth
    */
-  public async userInfo(openid: string, accessToken: string, lang?: string) {
+  async userInfo(openid: string, accessToken: string, lang?: string) {
     const options: AxiosRequestConfig = {
       baseURL: this.baseUrl,
       params: {
