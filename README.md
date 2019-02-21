@@ -1,5 +1,9 @@
 # wechat-oauth-lib
 
+![Dependency](https://img.shields.io/librariesio/github/abingoal/wechat-oauth-lib.svg)
+![Downloads](https://img.shields.io/npm/dm/wechat-oauth-lib.svg)
+![Version](https://img.shields.io/npm/v/wechat-oauth-lib.svg)
+
 > 根据[官方文档](https://open.weixin.qq.com/cgi-bin/showdocument?action=dir_list&t=resource/res_list&verify=1&id=open1419317853&token=&lang=zh_CN)，使用 TypeScript 编写的微信授权后接口调用类库
 
 ## 使用方法
@@ -7,7 +11,13 @@
 ### 首先引入该类库
 
 ```typescript
-import WechatOauth from "../libs/oauth/wechat-oauth";
+import WechatOauth from "wechat-oauth-lib";
+```
+
+### 初始化类库
+
+```typescript
+const oauth = new WechatOauth("appid", "secret");
 ```
 
 ### 调用
@@ -42,7 +52,7 @@ if (token.expires_in === 0) {
 }
 // 验证access_token是否有效
 const checktoken = await oauth.checkToken(openid, accesstoken);
-// 验证有效
+// 验证无效
 if (checktoken.errcode) {
   res.json({ code: checktoken.errcode, msg: checktoken.errmsg });
   return;
@@ -53,18 +63,16 @@ if (userinfo.errcode) {
   res.json({ code: userinfo.errcode, msg: userinfo.errmsg });
   return;
 }
-await dbUsers
-  .thirdPartLogin({
-    nickname,
-    avatar,
-    sex,
-    os,
-    ip,
-    deviceid,
-    openid
-  })
-  .then(data => handleResult(data)) // 此处处理获取到的用户信息
-  .catch(err => next(err));
+const loginResult = await dbUsers.thirdPartLogin({
+  nickname,
+  avatar,
+  sex,
+  os,
+  ip,
+  deviceid,
+  openid
+});
+DoSomethingWhithResult(loginResult);
 ```
 
 ### 优化
